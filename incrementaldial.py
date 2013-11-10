@@ -6,8 +6,8 @@ from PySide.QtCore import *
 class IncrementalDial(QWidget):
     valueChanged = Signal(int)
 
-    def __init__(self):
-        super(IncrementalDial, self).__init__()
+    def __init__(self, parent=None):
+        super(IncrementalDial, self).__init__(parent)
         self.dial = QDial()
         self.layout = QVBoxLayout()
         self.setLayout(self.layout)
