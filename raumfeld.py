@@ -1,6 +1,5 @@
 import socket
-import mimetools
-from StringIO import StringIO
+from pysimplesoap.client import SoapClient
 
 
 def discover(service, timeout=2, retries=1):
@@ -23,12 +22,33 @@ def discover(service, timeout=2, retries=1):
             try:
                 response, addr = sock.recvfrom(1024)
                 responses[addr[0]] = response
-                print mimetools.Message(StringIO(response)).headers
                 print response
             except socket.timeout:
                 break
     return responses
 
-devices = discover('ssdp:urn:schemas-upnp-org:device:MediaRenderer:1')
-for device in devices:
-    print "test",
+
+# devices = discover('ssdp:urn:schemas-upnp-org:device:MediaRenderer:1')
+# for device in devices:
+#     print device
+
+rendering_control = SoapClient(
+    location="http://192.168.178.37:42342/RenderingService/Control",
+    action="urn:upnp-org:serviceId:RenderingControl#",
+    namespace="http://schemas.xmlsoap.org/soap/envelope/",
+    soap_ns='soap', ns='s', exceptions=True)
+
+av_transport = SoapClient(
+    location="http://192.168.178.37:42342/TransportService/Control",
+    action="urn:schemas-upnp-org:service:AVTransport:1#",
+    namespace="http://schemas.xmlsoap.org/soap/envelope/",
+    soap_ns='soap', ns='s', exceptions=True)
+
+# response = av_transport.Play(InstanceID=1, Speed=2)
+response = av_transport.Pause(InstanceID=1)
+# response = av_transport.Play(InstanceID=1)
+# response = rendering_control.SetVolume(InstanceID=1, DesiredVolume=0)
+# response = rendering_control.SetMute(InstanceID=1, DesiredMute=0)
+
+# response = rendering_control.GetVolume(InstanceID=1)
+# print response.CurrentVolume
