@@ -44,7 +44,7 @@ def discover(raumfeld_devices_only=True, timeout=2, retries=1):
 
     # only return 'Digital Media Player', the virtual ones don't work?
     return [device for device in devices
-            if device.model_description == 'Digital Media Player']
+            if device.model_description != 'Digital Media Player']
 
 
 class RaumfeldDevice(object):

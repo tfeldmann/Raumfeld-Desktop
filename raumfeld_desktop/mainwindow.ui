@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>228</width>
-    <height>285</height>
+    <width>223</width>
+    <height>287</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -31,10 +31,13 @@
         <property name="text">
          <string>Mute</string>
         </property>
+        <property name="checkable">
+         <bool>true</bool>
+        </property>
        </widget>
       </item>
       <item>
-       <widget class="QSlider" name="sldVolume">
+       <widget class="QSlider" name="sliderVolume">
         <property name="focusPolicy">
          <enum>Qt::NoFocus</enum>
         </property>
@@ -46,7 +49,7 @@
      </layout>
     </item>
     <item>
-     <widget class="IncrementalDial" name="dial" native="true">
+     <widget class="IncrementalDial" name="dialVolume" native="true">
       <property name="sizePolicy">
        <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
         <horstretch>0</horstretch>
@@ -61,6 +64,16 @@
       </property>
       <property name="focusPolicy">
        <enum>Qt::NoFocus</enum>
+      </property>
+     </widget>
+    </item>
+    <item>
+     <widget class="QLabel" name="lblConnection">
+      <property name="text">
+       <string>Not connected</string>
+      </property>
+      <property name="alignment">
+       <set>Qt::AlignCenter</set>
       </property>
      </widget>
     </item>
