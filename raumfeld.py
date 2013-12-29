@@ -1,16 +1,29 @@
 import socket
+import urlparse
 from pysimplesoap.client import SoapClient
+from pysimplesoap.simplexml import SimpleXMLElement
+from pysimplesoap.helpers import fetch
+from pysimplesoap.transport import get_Http
 
 
-def discover(service='ssdp:all', timeout=2, retries=1):
-    group = ("239.255.255.250", 1900)
-    message = "\r\n".join([
-        'M-SEARCH * HTTP/1.1',
-        'HOST: {0}:{1}'.format(*group),
-        'MAN: "ssdp:discover"',
-        'ST: {st}', 'MX: 1', '', ''])
+def discover(raumfeld_devices_only=True, timeout=2, retries=1):
+    """
+    Discovers Raumfeld devices in the network
+    """
+    locations = []
+    group = '239.255.255.250', 1900
+    message = '\r\n'.join(['M-SEARCH * HTTP/1.1',
+                           'HOST: {0}:{1}'.format(*group),
+                           'MAN: "ssdp:discover"',
+                           'ST: {st}',
+                           'MX: 1', '', ''])
+
+    if raumfeld_devices_only:
+        service = 'ssdp:urn:schemas-upnp-org:device:MediaRenderer:1'
+    else:
+        service = 'ssdp:all'
+
     socket.setdefaulttimeout(timeout)
-    responses = {}
     for _ in range(retries):
         sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM,
                              socket.IPPROTO_UDP)
@@ -19,18 +32,28 @@ def discover(service='ssdp:all', timeout=2, retries=1):
         sock.sendto(message.format(st=service), group)
         while True:
             try:
-                response, addr = sock.recvfrom(1024)
-                responses[addr[0]] = response
-                print response
+                response = sock.recv(2048)
+                for line in response.split('\r\n'):
+                    if line.startswith('Location: '):
+                        location = line.split(' ')[1].strip()
+                        if not location in locations:
+                            locations.append(location)
             except socket.timeout:
                 break
-    return responses
+    return [RaumfeldDevice(location) for location in locations]
 
 
 class RaumfeldDevice(object):
 
-    def __init__(self, ip, port):
-        self.address = 'http://%s:%s' % (ip, port)
+    def __init__(self, location):
+        self.location = location
+
+        # parse location url
+        scheme, netloc, path, _, _, _ = urlparse.urlparse(location)
+        self.address = '%s://%s' % (scheme, netloc)
+        self._parse_device_description()
+
+        # set up soap clients
         self.rendering_control = SoapClient(
             location='%s/RenderingService/Control' % self.address,
             action='urn:upnp-org:serviceId:RenderingControl#',
@@ -42,6 +65,14 @@ class RaumfeldDevice(object):
             action='urn:schemas-upnp-org:service:AVTransport:1#',
             namespace='http://schemas.xmlsoap.org/soap/envelope/',
             soap_ns='soap', ns='s', exceptions=True)
+
+    def _parse_device_description(self):
+        http = (get_Http())()
+        xml = fetch(self.location, http)
+        d = SimpleXMLElement(xml)
+        self.friendly_name = str(next(d.device.friendlyName()))
+        self.model_description = str(next(d.device.modelDescription()))
+        self.model_name = str(next(d.modelName()))
 
     def play(self):
         self.av_transport.Play(InstanceID=1, Speed=2)
@@ -57,11 +88,14 @@ class RaumfeldDevice(object):
         return response.CurrentVolume
 
     def set_mute(self, mute):
-        self.rendering_control.SetMute(InstanceID=1, DesiredMute=mute)
+        self.rendering_control.SetMute(InstanceID=1,
+                                       DesiredMute=1 if mute else 0)
+
+    def __repr__(self):
+        return ("<RaumfeldDevice (%s, %s, %s)>" %
+               (self.friendly_name, self.model_name, self.model_description))
 
 
 if __name__ == '__main__':
-    devices = discover('ssdp:urn:schemas-upnp-org:device:MediaRenderer:1')
+    devices = discover()
     print devices
-    box = RaumfeldDevice(ip='192.168.178.37', port=42342)
-    box.pause()
