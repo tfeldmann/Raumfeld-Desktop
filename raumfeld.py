@@ -40,7 +40,11 @@ def discover(raumfeld_devices_only=True, timeout=2, retries=1):
                             locations.append(location)
             except socket.timeout:
                 break
-    return [RaumfeldDevice(location) for location in locations]
+    devices = [RaumfeldDevice(location) for location in locations]
+
+    # only return 'Digital Media Player', the virtual ones don't work?
+    return [device for device in devices
+            if device.model_description == 'Digital Media Player']
 
 
 class RaumfeldDevice(object):
