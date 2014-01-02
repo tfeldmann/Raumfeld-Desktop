@@ -3,6 +3,8 @@ Raumfeld-Desktop
 
 Python Desktop Controller for Teufel Raumfeld
 
+<img src="Screenshot.png">
+
 This program aims to bring basic Raumfeld controls (next / previous, start / pause, volume) to the desktop.
 As the software is written in python, it will run on Windows, Linux and Mac OS X.
 
