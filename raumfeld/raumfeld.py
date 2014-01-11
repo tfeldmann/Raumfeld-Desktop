@@ -1,5 +1,8 @@
 import socket
-import urlparse
+try:
+    import urlparse
+except:
+    import urllib.parse as urlparse
 from pysimplesoap.client import SoapClient
 from pysimplesoap.simplexml import SimpleXMLElement
 from pysimplesoap.helpers import fetch
@@ -102,4 +105,4 @@ class RaumfeldDevice(object):
 
 if __name__ == '__main__':
     devices = discover()
-    print devices
+    print(devices)

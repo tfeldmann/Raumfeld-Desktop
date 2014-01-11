@@ -5,5 +5,24 @@
 			"follow_symlinks": true,
 			"path": "."
 		}
-	]
+	],
+    "build_systems": [
+        {
+            "name": "Run Python App",
+            "shell": true,
+            "cmd": [
+                "/usr/local/bin/python -uB main.py"
+            ],
+            "working_dir": "$project_path",
+            "variants": [
+                {
+                    "name": "Build Gui and Resource files",
+                    "shell": true,
+                    "cmd": [
+                        "/usr/local/bin/python -uB build.py"
+                    ]
+                }
+            ]
+        }
+    ]
 }

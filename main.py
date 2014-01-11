@@ -1,7 +1,7 @@
 #!/usr/bin/env python2
 import sys
 from PySide.QtGui import QApplication
-from raumfeld_desktop.mainwindow import MainWindow
+from desktop_application.mainwindow import MainWindow
 
 
 def main():
