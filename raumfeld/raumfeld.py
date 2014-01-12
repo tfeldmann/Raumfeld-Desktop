@@ -1,15 +1,12 @@
 import socket
-try:
-    import urlparse
-except:
-    import urllib.parse as urlparse
+import urlparse
 from pysimplesoap.client import SoapClient
 from pysimplesoap.simplexml import SimpleXMLElement
 from pysimplesoap.helpers import fetch
 from pysimplesoap.transport import get_Http
 
 
-def discover(raumfeld_devices_only=True, timeout=2, retries=1):
+def discover(timeout=2, retries=1):
     """
     Discovers Raumfeld devices in the network
     """
@@ -20,11 +17,7 @@ def discover(raumfeld_devices_only=True, timeout=2, retries=1):
                            'MAN: "ssdp:discover"',
                            'ST: {st}',
                            'MX: 1', '', ''])
-
-    if raumfeld_devices_only:
-        service = 'ssdp:urn:schemas-upnp-org:device:MediaRenderer:1'
-    else:
-        service = 'ssdp:all'
+    service = 'ssdp:urn:schemas-upnp-org:device:MediaRenderer:1'  # 'ssdp:all'
 
     socket.setdefaulttimeout(timeout)
     for _ in range(retries):
@@ -45,9 +38,9 @@ def discover(raumfeld_devices_only=True, timeout=2, retries=1):
                 break
     devices = [RaumfeldDevice(location) for location in locations]
 
-    # only return 'Digital Media Player', the virtual ones don't work?
+    # only return 'Virtual Media Player'
     return [device for device in devices
-            if device.model_description != 'Digital Media Player']
+            if device.model_description == 'Virtual Media Player']
 
 
 class RaumfeldDevice(object):
@@ -98,9 +91,13 @@ class RaumfeldDevice(object):
         self.rendering_control.SetMute(InstanceID=1,
                                        DesiredMute=1 if mute else 0)
 
+    def get_mute(self):
+        response = self.rendering_control.GetMute(InstanceID=1)
+        return response.CurrentMute
+
     def __repr__(self):
-        return ("<RaumfeldDevice (%s, %s, %s)>" %
-               (self.friendly_name, self.model_name, self.model_description))
+        return ("<RaumfeldDevice (location=%s, name=%s)>" %
+               (self.location, self.friendly_name))
 
 
 if __name__ == '__main__':
