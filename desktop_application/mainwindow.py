@@ -6,12 +6,9 @@ from .mainwindow_ui import Ui_MainWindow as Ui
 __version__ = '0.2'
 
 
-class RaumfeldSearchThread(QThread):
+class SearchThread(QThread):
 
     devices_found = Signal(list)
-
-    def __init__(self, parent=None):
-        super(RaumfeldSearchThread, self).__init__(parent)
 
     def run(self):
         devices = raumfeld.discover()
@@ -44,9 +41,21 @@ class MainWindow(QMainWindow):
         self.ui.sliderVolume.valueChanged.connect(self.ui.dialVolume.setValue)
 
         # create worker thread for device communication
-        self.search_thread = RaumfeldSearchThread()
+        self.search_thread = SearchThread()
         self.search_thread.devices_found.connect(self.devices_found)
         self.search_thread.start()
+
+    @Slot(list)
+    def devices_found(self, devices):
+        try:
+            self.device = devices[0]
+            self.ui.sliderVolume.setValue(self.device.get_volume())
+            self.ui.lblConnection.setText(self.device.friendly_name)
+
+            self.setEnabled(True)
+        except:
+            # no devices found, search again
+            self.search_thread.start()
 
     @Slot(int)
     def on_dialVolume_valueChanged(self, value):
@@ -54,15 +63,7 @@ class MainWindow(QMainWindow):
 
     @Slot()
     def on_btnMute_clicked(self):
-        self.device.set_mute(True)
-
-    @Slot(list)
-    def devices_found(self, devices):
-        self.device = devices[0]
-        self.ui.sliderVolume.setValue(self.device.get_volume())
-        self.ui.lblConnection.setText(self.device.friendly_name)
-
-        self.setEnabled(True)
+        self.device.set_mute(False)
 
     def closeEvent(self, event):
         self.search_thread.quit()
