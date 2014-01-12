@@ -1,9 +1,10 @@
 from PySide.QtCore import QThread, Signal, Slot
 from PySide.QtGui import QMainWindow
+import time
 import raumfeld
 from .mainwindow_ui import Ui_MainWindow as Ui
 
-__version__ = '0.2'
+__version__ = '0.3'
 
 
 class SearchThread(QThread):
@@ -13,6 +14,22 @@ class SearchThread(QThread):
     def run(self):
         devices = raumfeld.discover()
         self.devices_found.emit(devices)
+
+
+class DeviceControlThread(QThread):
+
+    volume_infos = Signal(bool, int)
+
+    def __init__(self, device):
+        super(DeviceControlThread, self).__init__()
+        self.device = device
+
+    def run(self):
+        while True:
+            mute = self.device.get_mute()
+            volume = self.device.get_volume()
+            self.volume_infos.emit(mute, volume)
+            time.sleep(0.5)
 
 
 class MainWindow(QMainWindow):
@@ -49,13 +66,22 @@ class MainWindow(QMainWindow):
     def devices_found(self, devices):
         try:
             self.device = devices[0]
-            self.ui.sliderVolume.setValue(self.device.get_volume())
             self.ui.lblConnection.setText(self.device.friendly_name)
-
             self.setEnabled(True)
-        except:
+
+            self.device_thread = DeviceControlThread(self.device)
+            self.device_thread.volume_infos.connect(self.volume_infos)
+            self.device_thread.start()
+        except IndexError:
             # no devices found, search again
             self.search_thread.start()
+
+    @Slot(bool, int)
+    def volume_infos(self, mute, volume):
+        self.ui.btnMute.setChecked(not mute)
+        self.ui.btnMute.setEnabled(True)
+
+        self.ui.dialVolume.setValue(volume)
 
     @Slot(int)
     def on_dialVolume_valueChanged(self, value):
@@ -63,7 +89,8 @@ class MainWindow(QMainWindow):
 
     @Slot()
     def on_btnMute_clicked(self):
-        self.device.set_mute(False)
+        self.device.set_mute(self.ui.btnMute.isChecked())
+        self.ui.btnMute.setEnabled(False)
 
     def closeEvent(self, event):
         self.search_thread.quit()
