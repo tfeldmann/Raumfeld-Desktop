@@ -90,11 +90,13 @@ class RaumfeldDevice(object):
         return response.CurrentVolume
 
     def set_mute(self, mute):
-        self.rendering_control.SetMute(InstanceID=1, DesiredMute=int(mute))
+        self.rendering_control.SetMute(InstanceID=1,
+                                       DesiredMute=1 if mute else 0)
 
     def get_mute(self):
-        response = self.rendering_control.GetMute(InstanceID=1)
-        return response.CurrentMute
+        response = self.rendering_control.GetMute(InstanceID=1,
+                                                  Channel=1)
+        return response.CurrentMute == 1
 
     def __repr__(self):
         return ("<RaumfeldDevice (location=%s, name=%s)>" %
@@ -104,3 +106,5 @@ class RaumfeldDevice(object):
 if __name__ == '__main__':
     devices = discover()
     print(devices)
+
+    # print devices[0].get_mute()
