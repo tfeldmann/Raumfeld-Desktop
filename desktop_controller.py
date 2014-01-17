@@ -1,7 +1,7 @@
 #!/usr/bin/env python2
 import sys
 from PySide.QtGui import QApplication
-from desktop_application.mainwindow import MainWindow
+from desktop_controller.mainwindow import MainWindow
 
 
 def main():
@@ -10,7 +10,6 @@ def main():
     app.show()
     app.raise_()
     sys.exit(application.exec_())
-
 
 if __name__ == "__main__":
     main()

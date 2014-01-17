@@ -1,3 +1,6 @@
+"""
+raumfeld.py is a simple library to control Raumfeld speakers
+"""
 import socket
 import urlparse
 from pysimplesoap.client import SoapClient
@@ -59,7 +62,6 @@ class RaumfeldDevice(object):
             action='urn:upnp-org:serviceId:RenderingControl#',
             namespace='http://schemas.xmlsoap.org/soap/envelope/',
             soap_ns='soap', ns='s', exceptions=True)
-
         self.av_transport = SoapClient(
             location='%s/TransportService/Control' % self.address,
             action='urn:schemas-upnp-org:service:AVTransport:1#',
@@ -88,8 +90,7 @@ class RaumfeldDevice(object):
         return response.CurrentVolume
 
     def set_mute(self, mute):
-        self.rendering_control.SetMute(InstanceID=1,
-                                       DesiredMute=1 if mute else 0)
+        self.rendering_control.SetMute(InstanceID=1, DesiredMute=int(mute))
 
     def get_mute(self):
         response = self.rendering_control.GetMute(InstanceID=1)

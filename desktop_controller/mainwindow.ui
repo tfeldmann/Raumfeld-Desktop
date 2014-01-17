@@ -70,7 +70,7 @@
     <item>
      <widget class="QLabel" name="lblConnection">
       <property name="text">
-       <string>Not connected</string>
+       <string>Searching for devices...</string>
       </property>
       <property name="alignment">
        <set>Qt::AlignCenter</set>

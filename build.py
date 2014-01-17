@@ -25,7 +25,7 @@ def convert_rcc(args, dirname, filenames):
             old_path = os.path.join(dirname, filename)
             new_filename = os.path.splitext(filename)[0] + "_rc.py"
             new_path = os.path.join(dirname, new_filename)
-            cmd = "pyside-rcc " + old_path + " > " + new_path
+            cmd = "pyside-rcc -py3" + old_path + " > " + new_path
             print(cmd)
             os.system(cmd)
 
