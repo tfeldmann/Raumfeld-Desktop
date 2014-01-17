@@ -106,16 +106,16 @@ class MainWindow(QMainWindow):
     def volume_infos(self, mute, volume):
         self.ui.btnMute.setChecked(not mute)
         self.ui.btnMute.setEnabled(True)
-        self.ui.sliderVolume.setValue(volume)
+        self.ui.dialVolume.setValue(volume * 10)
 
     @Slot(int)
     def on_dialVolume_valueChanged(self, value):
         self.ui.sliderVolume.setValue(value // 10)
+        self.device_thread.set_volume(value // 10)
 
     @Slot(int)
-    def on_sliderVolume_valueChanged(self, value):
+    def on_sliderVolume_sliderMoved(self, value):
         self.ui.dialVolume.setValue(value * 10)
-        self.device_thread.set_volume(value)
 
     @Slot()
     def on_btnMute_clicked(self):
