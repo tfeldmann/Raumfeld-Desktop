@@ -2,10 +2,9 @@
 A sample desktop application using the raumfeld library
 """
 import time
-import raumfeld
 from PySide.QtCore import QThread, Signal, Slot
 from PySide.QtGui import QMainWindow
-from .mainwindow_ui import Ui_MainWindow as Ui
+import raumfeld
 
 __version__ = '0.3'
 
@@ -23,14 +22,17 @@ class DeviceControlThread(QThread):
 
     volume_infos = Signal(bool, int)
 
-    def __init__(self, device):
+    def __init__(self):
         super(DeviceControlThread, self).__init__()
-        self.device = device
+        self.device = None
         self._needs_update_flag = False
         self.exit_flag = False
 
     def run(self):
         while not self.exit_flag:
+            if self.device is None:
+                continue
+
             if self._needs_update_flag:
                 self.device.set_volume(self._volume)
                 # self.device.set_mute(self._mute)
@@ -63,6 +65,7 @@ class MainWindow(QMainWindow):
         """
         Initializes the application's UI
         """
+        from .mainwindow_ui import Ui_MainWindow as Ui
         super(MainWindow, self).__init__()
         self.ui = Ui()
         self.ui.setupUi(self)
@@ -74,10 +77,14 @@ class MainWindow(QMainWindow):
         self.ui.dialVolume.setMaximum(1000)
         self.ui.dialVolume.setTicksPerRotation(100)
 
-        # search for devices in a separate thread
+        # open a thread to search for devices
         self.search_thread = SearchThread()
         self.search_thread.devices_found.connect(self.devices_found)
         self.search_thread.start()
+
+        # create a worker thread to communicate with the device
+        self.device_thread = DeviceControlThread()
+        self.device_thread.volume_infos.connect(self.volume_infos)
 
     @Slot(list)
     def devices_found(self, devices):
@@ -85,12 +92,11 @@ class MainWindow(QMainWindow):
         Is called when the search thread finishes searching
         """
         try:
-            self.device = devices[0]
-            self.ui.lblConnection.setText(self.device.friendly_name)
+            device = devices[0]
+            self.ui.lblConnection.setText(device.friendly_name)
             self.setEnabled(True)
 
-            self.device_thread = DeviceControlThread(self.device)
-            self.device_thread.volume_infos.connect(self.volume_infos)
+            self.device_thread.device = device
             self.device_thread.start()
         except IndexError:
             # no devices found, search again
@@ -108,6 +114,7 @@ class MainWindow(QMainWindow):
 
     @Slot(int)
     def on_sliderVolume_valueChanged(self, value):
+        self.ui.dialVolume.setValue(value * 10)
         self.device_thread.set_volume(value)
 
     @Slot()
@@ -116,6 +123,6 @@ class MainWindow(QMainWindow):
         self.ui.btnMute.setEnabled(False)
 
     def closeEvent(self, event):
-        self.search_thread.quit()
+        self.search_thread.wait()
         self.device_thread.exit_flag = True
         self.device_thread.wait()
