@@ -16,6 +16,8 @@ class SearchThread(QThread):
     def run(self):
         devices = raumfeld.discover()
         self.devices_found.emit(devices)
+        for device in devices:
+            print(device.location)
 
 
 class DeviceControlThread(QThread):
@@ -29,13 +31,18 @@ class DeviceControlThread(QThread):
         self.exit_flag = False
 
     def run(self):
+        """
+        Poll volume and mute setting
+        """
         while not self.exit_flag:
             if self.device is None:
                 continue
 
             if self._needs_update_flag:
+                print "set volume", self._volume
+                print "set mute", self._mute
                 self.device.set_volume(self._volume)
-                # self.device.set_mute(self._mute)
+                self.device.set_mute(self._mute)
             else:
                 self._mute = self.device.get_mute()
                 self._volume = self.device.get_volume()
@@ -104,8 +111,7 @@ class MainWindow(QMainWindow):
 
     @Slot(bool, int)
     def volume_infos(self, mute, volume):
-        self.ui.btnMute.setChecked(not mute)
-        self.ui.btnMute.setEnabled(True)
+        print "got", mute, volume
         self.ui.dialVolume.setValue(volume * 10)
 
     @Slot(int)
@@ -117,9 +123,9 @@ class MainWindow(QMainWindow):
     def on_sliderVolume_sliderMoved(self, value):
         self.ui.dialVolume.setValue(value * 10)
 
-    @Slot()
-    def on_btnMute_clicked(self):
-        self.device.set_mute(self.ui.btnMute.isChecked())
+    @Slot(bool)
+    def on_btnMute_toggled(self, checked):
+        self.device_thread.set_mute(checked)
         self.ui.btnMute.setEnabled(False)
 
     def closeEvent(self, event):

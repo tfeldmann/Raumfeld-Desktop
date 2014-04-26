@@ -69,8 +69,9 @@ class RaumfeldDevice(object):
             soap_ns='soap', ns='s', exceptions=True)
 
     def _parse_device_description(self):
-        http = (get_Http())()
-        xml = fetch(self.location, http)
+        Http = get_Http()
+        self.http = Http(timeout=1)
+        xml = fetch(self.location, self.http)
         d = SimpleXMLElement(xml)
         self.friendly_name = str(next(d.device.friendlyName()))
         self.model_description = str(next(d.device.modelDescription()))
