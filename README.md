@@ -28,17 +28,19 @@ To install the requirements (PySide and pysimplesoap):
 Example usage of the module `raumfeld.py`
 -----------------------------------------
 
-    import raumfeld
+```python
+import raumfeld
 
-    # discovery returns a list of RaumfeldDevices
-    devices = raumfeld.discover(timeout=1, retries=1)
-    if len(devices) > 0:
-        speaker = devices[0]
-        # muting
-        speaker.mute()
-        # get the current volume
-        print(speaker.volume)
-        # set the volume
-        speaker.volume = 50
-    else:
-        print('No devices found.')
+# discovery returns a list of RaumfeldDevices
+devices = raumfeld.discover(timeout=1, retries=1)
+if len(devices) > 0:
+    speaker = devices[0]
+    # muting
+    speaker.mute()
+    # get the current volume
+    print(speaker.volume)
+    # set the volume
+    speaker.volume = 50
+else:
+    print('No devices found.')
+```
