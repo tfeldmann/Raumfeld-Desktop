@@ -1,4 +1,3 @@
-#!/usr/bin/env python2
 import sys
 from PySide.QtGui import QApplication
 from desktop_controller.mainwindow import MainWindow

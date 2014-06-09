@@ -2,16 +2,15 @@
 A sample desktop application using the raumfeld library
 """
 import time
-from PySide.QtCore import QThread, Signal, Slot
-from PySide.QtGui import QMainWindow
+from PySide import QtCore, QtGui
 import raumfeld
 
 __version__ = '0.3'
 
 
-class SearchThread(QThread):
+class SearchThread(QtCore.QThread):
 
-    devices_found = Signal(list)
+    devices_found = QtCore.Signal(list)
 
     def run(self):
         devices = raumfeld.discover()
@@ -20,9 +19,9 @@ class SearchThread(QThread):
             print(device.location)
 
 
-class DeviceControlThread(QThread):
+class DeviceControlThread(QtCore.QThread):
 
-    volume_infos = Signal(bool, int)
+    volume_infos = QtCore.Signal(bool, int)
 
     def __init__(self):
         super(DeviceControlThread, self).__init__()
@@ -39,14 +38,9 @@ class DeviceControlThread(QThread):
                 continue
 
             if self._needs_update_flag:
-                print "set volume", self._volume
-                print "set mute", self._mute
-                self.device.set_volume(self._volume)
-                self.device.set_mute(self._mute)
+                self.device.volume = self._volume
             else:
-                self._mute = self.device.get_mute()
-                self._volume = self.device.get_volume()
-                self.volume_infos.emit(self._mute, self._volume)
+                self.volume_infos.emit(self.device.mute, self.device.volume)
 
             self._needs_update_flag = False
             time.sleep(1.0)
@@ -60,15 +54,15 @@ class DeviceControlThread(QThread):
         self._needs_update_flag = True
 
 
-class MainWindow(QMainWindow):
+class MainWindow(QtGui.QMainWindow):
 
     """
     Raumfeld Desktop Application
     """
 
-    search_for_devices = Signal()
+    search_for_devices = QtCore.Signal()
 
-    def __init__(self, application=None):
+    def __init__(self, parent=None):
         """
         Initializes the application's UI
         """
@@ -92,11 +86,10 @@ class MainWindow(QMainWindow):
         # create a worker thread to communicate with the device
         self.device_thread = DeviceControlThread()
         self.device_thread.volume_infos.connect(self.volume_infos)
+        # the device thread is started as soon as a device is found
 
-    @Slot(list)
     def devices_found(self, devices):
-        """
-        Is called when the search thread finishes searching
+        """Is called when the search thread finishes searching
         """
         try:
             device = devices[0]
@@ -109,21 +102,23 @@ class MainWindow(QMainWindow):
             # no devices found, search again
             self.search_thread.start()
 
-    @Slot(bool, int)
     def volume_infos(self, mute, volume):
-        print "got", mute, volume
         self.ui.dialVolume.setValue(volume * 10)
 
-    @Slot(int)
+    #
+    # View Callbacks
+    #
+
+    @QtCore.Slot(int)
     def on_dialVolume_valueChanged(self, value):
         self.ui.sliderVolume.setValue(value // 10)
         self.device_thread.set_volume(value // 10)
 
-    @Slot(int)
+    @QtCore.Slot(int)
     def on_sliderVolume_sliderMoved(self, value):
         self.ui.dialVolume.setValue(value * 10)
 
-    @Slot(bool)
+    @QtCore.Slot(bool)
     def on_btnMute_toggled(self, checked):
         self.device_thread.set_mute(checked)
         self.ui.btnMute.setEnabled(False)
