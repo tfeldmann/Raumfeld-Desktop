@@ -1,20 +1,28 @@
 """
-raumfeld.py is a simple library to control Raumfeld speakers
+A pythonic library to discover and control Teufel Raumfeld speakers
+
+:author: Thomas Feldmann
 """
 import socket
-import urlparse
+try:
+    from urllib.parse import urlparse  # python3
+except ImportError:
+    from urlparse import urlparse  # python2
 from pysimplesoap.client import SoapClient
 from pysimplesoap.simplexml import SimpleXMLElement
 from pysimplesoap.helpers import fetch
 from pysimplesoap.transport import get_Http
 
 
-def discover(timeout=2, retries=1):
-    """
-    Discovers Raumfeld devices in the network
+def discover(timeout=1, retries=1):
+    """Discover Raumfeld devices in the network
+
+    :param timeout: The timeout in seconds
+    :param retries: How often the search should be retried
+    :returns: A list of raumfeld devices
     """
     locations = []
-    group = '239.255.255.250', 1900
+    group = b'239.255.255.250', 1900
     message = '\r\n'.join(['M-SEARCH * HTTP/1.1',
                            'HOST: {0}:{1}'.format(*group),
                            'MAN: "ssdp:discover"',
@@ -28,10 +36,10 @@ def discover(timeout=2, retries=1):
                              socket.IPPROTO_UDP)
         sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         sock.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_TTL, 2)
-        sock.sendto(message.format(st=service), group)
+        sock.sendto(bytes(message.format(st=service)), group)
         while True:
             try:
-                response = sock.recv(2048)
+                response = sock.recv(2048).decode('utf-8')
                 for line in response.split('\r\n'):
                     if line.startswith('Location: '):
                         location = line.split(' ')[1].strip()
@@ -52,9 +60,17 @@ class RaumfeldDevice(object):
         self.location = location
 
         # parse location url
-        scheme, netloc, path, _, _, _ = urlparse.urlparse(location)
+        scheme, netloc, path, _, _, _ = urlparse(location)
         self.address = '%s://%s' % (scheme, netloc)
-        self._parse_device_description()
+
+        # parse device description
+        Http = get_Http()
+        self.http = Http(timeout=1)
+        xml = fetch(self.location, self.http)
+        d = SimpleXMLElement(xml)
+        self.friendly_name = str(next(d.device.friendlyName()))
+        self.model_description = str(next(d.device.modelDescription()))
+        self.model_name = str(next(d.modelName()))
 
         # set up soap clients
         self.rendering_control = SoapClient(
@@ -68,44 +84,48 @@ class RaumfeldDevice(object):
             namespace='http://schemas.xmlsoap.org/soap/envelope/',
             soap_ns='soap', ns='s', exceptions=True)
 
-    def _parse_device_description(self):
-        Http = get_Http()
-        self.http = Http(timeout=1)
-        xml = fetch(self.location, self.http)
-        d = SimpleXMLElement(xml)
-        self.friendly_name = str(next(d.device.friendlyName()))
-        self.model_description = str(next(d.device.modelDescription()))
-        self.model_name = str(next(d.modelName()))
-
     def play(self):
+        """Start playing"""
         self.av_transport.Play(InstanceID=1, Speed=2)
 
     def pause(self):
+        """Pause"""
         self.av_transport.Pause(InstanceID=1)
 
-    def set_volume(self, volume):
-        self.rendering_control.SetVolume(InstanceID=1, DesiredVolume=volume)
+    @property
+    def volume(self):
+        """get/set the current volume"""
+        return self.rendering_control.GetVolume(InstanceID=1).CurrentVolume
 
-    def get_volume(self):
-        response = self.rendering_control.GetVolume(InstanceID=1)
-        return response.CurrentVolume
+    @volume.setter
+    def volume(self, value):
+        self.rendering_control.SetVolume(InstanceID=1, DesiredVolume=value)
 
-    def set_mute(self, mute):
-        self.rendering_control.SetMute(InstanceID=1,
-                                       DesiredMute=1 if mute else 0)
-
-    def get_mute(self):
-        response = self.rendering_control.GetMute(InstanceID=1,
-                                                  Channel=1)
+    @property
+    def mute(self):
+        """get/set the current mute state"""
+        response = self.rendering_control.GetMute(InstanceID=1, Channel=1)
         return response.CurrentMute == 1
 
+    @mute.setter
+    def mute(self, value):
+        self.rendering_control.SetMute(InstanceID=1,
+                                       DesiredMute=1 if value else 0)
+
     def __repr__(self):
-        return ("<RaumfeldDevice (location=%s, name=%s)>" %
-               (self.location, self.friendly_name))
+        return ('<RaumfeldDevice(location="{0}", name="{1}")>'
+                .format(self.location, self.friendly_name))
+
+    def __str__(self):
+        return self.friendly_name
 
 
 if __name__ == '__main__':
     devices = discover()
     print(devices)
-
-    # print devices[0].get_mute()
+    if len(devices) > 0:
+        device = devices.pop()
+        print(device.volume)
+        print(device.mute)
+    else:
+        print('No Raumfeld devices found!')
