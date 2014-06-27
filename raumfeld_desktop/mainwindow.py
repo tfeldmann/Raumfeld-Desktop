@@ -2,8 +2,8 @@
 A sample desktop application using the raumfeld library
 """
 import time
-from PySide import QtCore, QtGui
 import raumfeld
+from PySide import QtCore, QtGui
 
 __version__ = '0.3'
 

@@ -4,33 +4,39 @@
 		{
 			"cmd":
 			[
-				"/usr/local/bin/python -uB main.py"
+				"/usr/local/bin/python3 -uB main.py"
 			],
 			"name": "Run Python App",
 			"shell": true,
+			"working_dir": "$project_path",
+
 			"variants":
 			[
 				{
 					"cmd":
 					[
-						"/usr/local/bin/python -uB build.py"
+						"/usr/local/bin/python3 -uB build.py"
 					],
 					"name": "Build Gui and Resource files",
 					"shell": true
 				}
 			],
-			"working_dir": "$project_path"
 		}
 	],
 	"folders":
 	[
 		{
-			"follow_symlinks": true,
-			"path": "."
+			"path": ".",
+			"folder_exclude_patterns": [
+				"__pycache__"
+			],
+			"file_exclude_patterns": [
+				"*.sublime-*"
+			],
 		}
 	],
 	"settings":
 	{
-		"python_interpreter": "python"
+		"python_interpreter": "python3"
 	}
 }

@@ -84,7 +84,7 @@
   <customwidget>
    <class>IncrementalDial</class>
    <extends>QWidget</extends>
-   <header>incrementaldial.h</header>
+   <header>raumfeld_desktop/incrementaldial.h</header>
    <container>1</container>
   </customwidget>
  </customwidgets>
