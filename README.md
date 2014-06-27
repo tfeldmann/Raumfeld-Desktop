@@ -18,7 +18,7 @@ Todo: You can use the prepackaged binaries for Windows and Mac OS X:
 
 - Windows x64
 - Windows x86
-- Mac OS X
+- [Mac OS X](https://github.com/tfeldmann/Raumfeld-Desktop/releases/download/v0.3/Raumfeld-0.3.dmg)
 
 
 Developer Environment
