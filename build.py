@@ -1,44 +1,63 @@
-# -*- coding: utf-8 -*-
 """
-Use this script to convert the given Qt .ui and .rc files into python files.
-This currently only works in Linux or Mac OS X with pyside-tools installed.
+Use this script to convert all .ui and .rc files in any subdirectory into
+python files.
+
+This is tested to work with Linux and Mac OS X with pyside-tools installed.
 """
 import os
-import pysideuic
+import logging
 
 
-def _naming_convention_ui(pydir, pyfile):
-    name = os.path.splitext(pyfile)[0]
-    return pydir, name + '_ui.py'
+PATH = '.'
 
 
-def convert_ui(path):
-    pysideuic.compileUiDir(path,
-                           recurse=True,
-                           map=_naming_convention_ui,
-                           from_imports=True)
+def convert_qrc_in_root(root, folders, files):
+    for f in files:
+        if f.endswith('.qrc'):
+            # set new filename
+            name, _ = os.path.splitext(f)
+            converted = '{name}_rc.py'.format(name=name)
 
+            # get path starting from root
+            input = os.path.join(root, f)
+            output = os.path.join(root, converted)
+            logging.info('Convert resource file {file}'.format(file=input))
 
-def convert_rcc(args, dirname, filenames):
-    for filename in filenames:
-        if '.qrc' in filename:
-            old_path = os.path.join(dirname, filename)
-            new_filename = os.path.splitext(filename)[0] + "_rc.py"
-            new_path = os.path.join(dirname, new_filename)
-            cmd = "pyside-rcc -py3" + old_path + " > " + new_path
-            print(cmd)
+            # execute conversion command
+            cmd = "pyside-rcc -py3 -o {output} {input}".format(output=output,
+                                                               input=input)
             os.system(cmd)
 
 
-def main(ui=True, qrc=True):
-    path = './'
-    if qrc:
-        print("Converting .qrc files.")
-        os.walk(path, convert_rcc, None)
-    if ui:
-        print("Converting .ui-files.")
-        convert_ui(path)
-    print('Done.')
+def convert_ui_in_root(root, folders, files):
+    for f in files:
+        if f.endswith('.ui'):
+            # set new filename
+            name, _ = os.path.splitext(f)
+            converted = '{name}_ui.py'.format(name=name)
+
+            # get path starting from root
+            input = os.path.join(root, f)
+            output = os.path.join(root, converted)
+            logging.info('Convert GUI file {file}'.format(file=input))
+
+            # execute conversion command
+            cmd = "pyside-uic --from-imports -o {output} {input}".format(
+                output=output, input=input)
+            os.system(cmd)
+
+
+def convert(ui=False, rc=False):
+    for root, folders, files in os.walk(top=PATH):
+        if not '.git' in root:  # don't do anything in the .git directory!
+            if rc:
+                convert_qrc_in_root(root, folders, files)
+            if ui:
+                convert_ui_in_root(root, folders, files)
+
+
+def main():
+    convert(ui=True, rc=True)
 
 if __name__ == '__main__':
     main()
