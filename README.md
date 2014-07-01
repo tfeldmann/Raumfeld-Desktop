@@ -16,8 +16,8 @@ Installation
 ------------
 Todo: You can use the prepackaged binaries for Windows and Mac OS X:
 
-- Windows x64
-- Windows x86
+- Windows x64 (Not yet packaged)
+- Windows x86 (Not yet packaged)
 - [Mac OS X](https://github.com/tfeldmann/Raumfeld-Desktop/releases/download/v0.3/Raumfeld-0.3.dmg)
 
 
@@ -26,14 +26,22 @@ Developer Environment
 
 Install the requirements (`PySide` and `raumfeld`):
 
-    pip3 install -r requirements.txt
+    pip3 install -Ur requirements.txt
 
-If you're on a mac and having problems with pip,
-install homebrew first and use:
-
+If you're having problems installing PySide with pip try:
+    
+    % Mac OS X
     brew install python3
     brew install --with-python3 pyside
     brew install pyside-tools
+    pip3 install -U raumfeld
+    
+    % Linux
+    sudo apt-get install python3
+    sudo apt-get install python3-pip
+    sudo apt-get install python3-pyside
+    sudo apt-get install pyside-tools
+    sudo pip3 install -U raumfeld
 
 Build the GUI-files:
 
