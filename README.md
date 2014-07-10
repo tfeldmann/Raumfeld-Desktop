@@ -37,11 +37,10 @@ If you're having problems installing PySide with pip try:
     pip3 install -U raumfeld
     
     % Linux
-    sudo apt-get install python3
-    sudo apt-get install python3-pip
-    sudo apt-get install python3-pyside
-    sudo apt-get install pyside-tools
+    sudo apt-get install qt4-qmake qt4-dev-tools
+    sudo apt-get install python3 python3-pip python3-pyside pyside-tools
     sudo pip3 install -U raumfeld
+
 
 Build the GUI-files:
 
