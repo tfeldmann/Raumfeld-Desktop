@@ -1,3 +1,4 @@
 *_ui.py
 *.sublime-workspace
 *.pyo
+build/

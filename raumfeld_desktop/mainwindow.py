@@ -4,8 +4,8 @@ A sample desktop application using the raumfeld library
 import time
 import raumfeld
 from PySide import QtCore, QtGui
-
-__version__ = '0.3'
+from raumfeld_desktop import __version__
+from .mainwindow_ui import Ui_MainWindow as Ui
 
 
 class SearchThread(QtCore.QThread):
@@ -66,7 +66,6 @@ class MainWindow(QtGui.QMainWindow):
         """
         Initializes the application's UI
         """
-        from .mainwindow_ui import Ui_MainWindow as Ui
         super(MainWindow, self).__init__()
         self.ui = Ui()
         self.ui.setupUi(self)
